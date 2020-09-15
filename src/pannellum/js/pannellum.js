@@ -21,7 +21,7 @@
  * THE SOFTWARE.
  */
 
-window.pannellum = (function(window, document, undefined) {
+window.pannellum = (((window, document, undefined) => {
 
   
 
@@ -33,43 +33,46 @@ window.pannellum = (function(window, document, undefined) {
  * @param {Object} initialConfig - Inital configuration for viewer.
  */
   function Viewer(container, initialConfig) {
-
-    var _this = this;
+    const _this = this;
 
     // Declare variables
-    var config,
-      renderer,
-      preview,
-      isUserInteracting = false,
-      latestInteraction = Date.now(),
-      onPointerDownPointerX = 0,
-      onPointerDownPointerY = 0,
-      onPointerDownPointerDist = -1,
-      onPointerDownYaw = 0,
-      onPointerDownPitch = 0,
-      keysDown = new Array(10),
-      fullscreenActive = false,
-      loaded,
-      error = false,
-      isTimedOut = false,
-      listenersAdded = false,
-      panoImage,
-      prevTime,
-      speed = { 'yaw': 0, 'pitch': 0, 'hfov': 0 },
-      animating = false,
-      orientation = false,
-      orientationYawOffset = 0,
-      autoRotateStart,
-      autoRotateSpeed = 0,
-      origHfov,
-      origPitch,
-      animatedMove = {},
-      externalEventListeners = {},
-      specifiedPhotoSphereExcludes = [],
-      update = false, // Should we update when still to render dynamic content
-      hotspotsCreated = false;
+    let config;
 
-    var defaultConfig = {
+    let renderer;
+    let preview;
+    let isUserInteracting = false;
+    let latestInteraction = Date.now();
+    let onPointerDownPointerX = 0;
+    let onPointerDownPointerY = 0;
+    let onPointerDownPointerDist = -1;
+    let onPointerDownYaw = 0;
+    let onPointerDownPitch = 0;
+    const keysDown = new Array(10);
+    let fullscreenActive = false;
+    let loaded;
+    let error = false;
+    let isTimedOut = false;
+    let listenersAdded = false;
+    let panoImage;
+    let prevTime;
+    const speed = { 'yaw': 0, 'pitch': 0, 'hfov': 0 };
+    let animating = false;
+    let orientation = false;
+    let orientationYawOffset = 0;
+    let autoRotateStart;
+    let autoRotateSpeed = 0;
+    let origHfov;
+    let origPitch;
+    let animatedMove = {};
+    let externalEventListeners = {};
+    let specifiedPhotoSphereExcludes = [];
+
+    let // Should we update when still to render dynamic content
+    update = false;
+
+    let hotspotsCreated = false;
+
+    const defaultConfig = {
       hfov: 100,
       minHfov: 50,
       maxHfov: 120,
@@ -138,30 +141,30 @@ window.pannellum = (function(window, document, undefined) {
     container.tabIndex = 0;
 
     // Create container for ui
-    var uiContainer = document.createElement('div');
+    const uiContainer = document.createElement('div');
     uiContainer.className = 'pnlm-ui';
     container.appendChild(uiContainer);
 
     // Create container for renderer
-    var renderContainer = document.createElement('div');
+    const renderContainer = document.createElement('div');
     renderContainer.className = 'pnlm-render-container';
     container.appendChild(renderContainer);
-    var dragFix = document.createElement('div');
+    const dragFix = document.createElement('div');
     dragFix.className = 'pnlm-dragfix';
     uiContainer.appendChild(dragFix);
 
     // Display about information on right click
-    var aboutMsg = document.createElement('span');
-    aboutMsg.className = 'pnlm-about-msg';
-    aboutMsg.innerHTML = '<a href="https://pannellum.org/" target="_blank">Pannellum</a>';
-    uiContainer.appendChild(aboutMsg);
-    dragFix.addEventListener('contextmenu', aboutMessage);
+    const aboutMsg = document.createElement('span');
+    //aboutMsg.className = 'pnlm-about-msg';
+    //aboutMsg.innerHTML = '<a href="https://pannellum.org/" target="_blank">Pannellum</a>';
+    //uiContainer.appendChild(aboutMsg);
+    //dragFix.addEventListener('contextmenu', aboutMessage);
 
     // Create info display
-    var infoDisplay = {};
+    const infoDisplay = {};
 
     // Hot spot debug indicator
-    var hotSpotDebugIndicator = document.createElement('div');
+    const hotSpotDebugIndicator = document.createElement('div');
     hotSpotDebugIndicator.className = 'pnlm-sprite pnlm-hot-spot-debug-indicator';
     uiContainer.appendChild(hotSpotDebugIndicator);
 
@@ -203,7 +206,7 @@ window.pannellum = (function(window, document, undefined) {
     uiContainer.appendChild(infoDisplay.errorMsg);
 
     // Create controls
-    var controls = {};
+    const controls = {};
     controls.container = document.createElement('div');
     controls.container.className = 'pnlm-controls-container';
     uiContainer.appendChild(controls.container);
@@ -211,7 +214,7 @@ window.pannellum = (function(window, document, undefined) {
     // Load button
     controls.load = document.createElement('div');
     controls.load.className = 'pnlm-load-button';
-    controls.load.addEventListener('click', function() {
+    controls.load.addEventListener('click', () => {
       processOptions();
       load();
     });
@@ -239,17 +242,17 @@ window.pannellum = (function(window, document, undefined) {
 
     // Device orientation toggle
     controls.orientation = document.createElement('div');
-    controls.orientation.addEventListener('click', function(e) {
+    controls.orientation.addEventListener('click', e => {
       if (orientation)
         {stopOrientation();}
       else
         {startOrientation();}
     });
-    controls.orientation.addEventListener('mousedown', function(e) {e.stopPropagation();});
-    controls.orientation.addEventListener('touchstart', function(e) {e.stopPropagation();});
-    controls.orientation.addEventListener('pointerdown', function(e) {e.stopPropagation();});
+    controls.orientation.addEventListener('mousedown', e => {e.stopPropagation();});
+    controls.orientation.addEventListener('touchstart', e => {e.stopPropagation();});
+    controls.orientation.addEventListener('pointerdown', e => {e.stopPropagation();});
     controls.orientation.className = 'pnlm-orientation-button pnlm-orientation-button-inactive pnlm-sprite pnlm-controls pnlm-control';
-    var orientationSupport, startOrientationIfSupported = false;
+    let orientationSupport, startOrientationIfSupported = false;
     function deviceOrientationTest(e) {
       window.removeEventListener('deviceorientation', deviceOrientationTest);
       if (e && e.alpha !== null && e.beta !== null && e.gamma !== null) {
@@ -268,7 +271,7 @@ window.pannellum = (function(window, document, undefined) {
     }
 
     // Compass
-    var compass = document.createElement('div');
+    const compass = document.createElement('div');
     compass.className = 'pnlm-compass pnlm-controls pnlm-control';
     uiContainer.appendChild(compass);
 
@@ -292,7 +295,7 @@ window.pannellum = (function(window, document, undefined) {
     // Display an error for IE 9 as it doesn't work but also doesn't otherwise
     // show an error (older versions don't work at all)
     // Based on: http://stackoverflow.com/a/10965203
-      var div = document.createElement("div");
+      const div = document.createElement("div");
       div.innerHTML = "<!--[if lte IE 9]><i></i><![endif]-->";
       if (div.getElementsByTagName("i").length == 1) {
         anError();
@@ -302,7 +305,7 @@ window.pannellum = (function(window, document, undefined) {
       origHfov = config.hfov;
       origPitch = config.pitch;
 
-      var i, p;
+      let i, p;
     
       if (config.type == 'cubemap') {
         panoImage = [];
@@ -313,7 +316,7 @@ window.pannellum = (function(window, document, undefined) {
         infoDisplay.load.lbox.style.display = 'block';
         infoDisplay.load.lbar.style.display = 'none';
       } else if (config.type == 'multires') {
-        var c = JSON.parse(JSON.stringify(config.multiRes));    // Deep copy
+        const c = JSON.parse(JSON.stringify(config.multiRes));    // Deep copy
         // Avoid "undefined" in path, check (optional) multiRes.basePath, too
         // Use only multiRes.basePath if it's an absolute URL
         if (config.basePath && config.multiRes.basePath &&
@@ -340,17 +343,17 @@ window.pannellum = (function(window, document, undefined) {
       // Configure image loading
       if (config.type == 'cubemap') {
         // Quick loading counter for synchronous loading
-        var itemsToLoad = 6;
+        let itemsToLoad = 6;
         
-        var onLoad = function() {
+        const onLoad = () => {
           itemsToLoad--;
           if (itemsToLoad === 0) {
             onImageLoad();
           }
         };
         
-        var onError = function(e) {
-          var a = document.createElement('a');
+        const onError = e => {
+          const a = document.createElement('a');
           a.href = e.target.src;
           a.textContent = a.href;
           anError(config.strings.fileAccessError.replace('%s', a.outerHTML));
@@ -359,7 +362,7 @@ window.pannellum = (function(window, document, undefined) {
         for (i = 0; i < panoImage.length; i++) {
           p = config.cubeMap[i];
           if (p == "null") { // support partial cubemap image with explicitly empty faces
-            console.log('Will use background instead of missing cubemap face ' + i);
+            console.log(`Will use background instead of missing cubemap face ${i}`);
             onLoad();
           } else {
             if (config.basePath && !absoluteURL(p)) {
@@ -387,25 +390,25 @@ window.pannellum = (function(window, document, undefined) {
             onImageLoad();
           };
             
-          var xhr = new XMLHttpRequest();
+          const xhr = new XMLHttpRequest();
           xhr.onloadend = function() {
             if (xhr.status != 200) {
               // Display error if image can't be loaded
-              var a = document.createElement('a');
+              const a = document.createElement('a');
               a.href = p;
               a.textContent = a.href;
               anError(config.strings.fileAccessError.replace('%s', a.outerHTML));
             }
-            var img = this.response;
+            const img = this.response;
             parseGPanoXMP(img);
             infoDisplay.load.msg.innerHTML = '';
           };
-          xhr.onprogress = function(e) {
+          xhr.onprogress = e => {
             if (e.lengthComputable) {
               // Display progress
-              var percent = e.loaded / e.total * 100;
-              infoDisplay.load.lbarFill.style.width = percent + '%';
-              var unit, numerator, denominator;
+              const percent = e.loaded / e.total * 100;
+              infoDisplay.load.lbarFill.style.width = `${percent}%`;
+              let unit, numerator, denominator;
               if (e.total > 1e6) {
                 unit = 'MB';
                 numerator = (e.loaded / 1e6).toFixed(2);
@@ -419,7 +422,7 @@ window.pannellum = (function(window, document, undefined) {
                 numerator = e.loaded;
                 denominator = e.total;
               }
-              infoDisplay.load.msg.innerHTML = numerator + ' / ' + denominator + ' ' + unit;
+              infoDisplay.load.msg.innerHTML = `${numerator} / ${denominator} ${unit}`;
             } else {
               // Display loading spinner
               infoDisplay.load.lbox.style.display = 'block';
@@ -453,7 +456,7 @@ window.pannellum = (function(window, document, undefined) {
     function absoluteURL(url) {
     // From http://stackoverflow.com/a/19709846
       return new RegExp('^(?:[a-z]+:)?//', 'i').test(url) || url[0] == '/' || url.slice(0, 5) == 'blob:';
-    };
+    }
 
     /**
  * Create renderer and initialize event listeners once image is loaded.
@@ -507,7 +510,7 @@ window.pannellum = (function(window, document, undefined) {
 
       renderInit();
       setHfov(config.hfov); // possibly adapt hfov after configuration and canvas is complete; prevents empty space on top or bottom by zomming out too much
-      setTimeout(function(){isTimedOut = true;}, 500);
+      setTimeout(() => {isTimedOut = true;}, 500);
     }
 
     /**
@@ -517,30 +520,30 @@ window.pannellum = (function(window, document, undefined) {
  * @param {Image} image - Image to read XMP metadata from.
  */
     function parseGPanoXMP(image) {
-      var reader = new FileReader();
-      reader.addEventListener('loadend', function() {
-        var img = reader.result;
+      const reader = new FileReader();
+      reader.addEventListener('loadend', () => {
+        const img = reader.result;
 
         // This awful browser specific test exists because iOS 8 does not work
         // with non-progressive encoded JPEGs.
         if (navigator.userAgent.toLowerCase().match(/(iphone|ipod|ipad).* os 8_/)) {
-          var flagIndex = img.indexOf('\xff\xc2');
+          const flagIndex = img.indexOf('\xff\xc2');
           if (flagIndex < 0 || flagIndex > 65536)
             {anError(config.strings.iOS8WebGLError);}
         }
 
-        var start = img.indexOf('<x:xmpmeta');
+        const start = img.indexOf('<x:xmpmeta');
         if (start > -1 && config.ignoreGPanoXMP !== true) {
-          var xmpData = img.substring(start, img.indexOf('</x:xmpmeta>') + 12);
+          const xmpData = img.substring(start, img.indexOf('</x:xmpmeta>') + 12);
             
           // Extract the requested tag from the XMP data
-          var getTag = function(tag) {
-            var result;
-            if (xmpData.indexOf(tag + '="') >= 0) {
-              result = xmpData.substring(xmpData.indexOf(tag + '="') + tag.length + 2);
+          const getTag = tag => {
+            let result;
+            if (xmpData.includes(`${tag}="`)) {
+              result = xmpData.substring(xmpData.indexOf(`${tag}="`) + tag.length + 2);
               result = result.substring(0, result.indexOf('"'));
-            } else if (xmpData.indexOf(tag + '>') >= 0) {
-              result = xmpData.substring(xmpData.indexOf(tag + '>') + tag.length + 1);
+            } else if (xmpData.includes(`${tag}>`)) {
+              result = xmpData.substring(xmpData.indexOf(`${tag}>`) + tag.length + 1);
               result = result.substring(0, result.indexOf('<'));
             }
             if (result !== undefined) {
@@ -550,7 +553,7 @@ window.pannellum = (function(window, document, undefined) {
           };
             
             // Relevant XMP data
-          var xmp = {
+          const xmp = {
             fullWidth: getTag('GPano:FullPanoWidthPixels'),
             croppedWidth: getTag('GPano:CroppedAreaImageWidthPixels'),
             fullHeight: getTag('GPano:FullPanoHeightPixels'),
@@ -566,13 +569,13 @@ window.pannellum = (function(window, document, undefined) {
                 xmp.topPixels !== null) {
                 
             // Set up viewer using GPano XMP data
-            if (specifiedPhotoSphereExcludes.indexOf('haov') < 0)
+            if (!specifiedPhotoSphereExcludes.includes('haov'))
               {config.haov = xmp.croppedWidth / xmp.fullWidth * 360;}
-            if (specifiedPhotoSphereExcludes.indexOf('vaov') < 0)
+            if (!specifiedPhotoSphereExcludes.includes('vaov'))
               {config.vaov = xmp.croppedHeight / xmp.fullHeight * 180;}
-            if (specifiedPhotoSphereExcludes.indexOf('vOffset') < 0)
+            if (!specifiedPhotoSphereExcludes.includes('vOffset'))
               {config.vOffset = ((xmp.topPixels + xmp.croppedHeight / 2) / xmp.fullHeight - 0.5) * -180;}
-            if (xmp.heading !== null && specifiedPhotoSphereExcludes.indexOf('northOffset') < 0) {
+            if (xmp.heading !== null && !specifiedPhotoSphereExcludes.includes('northOffset')) {
               // TODO: make sure this works correctly for partial panoramas
               config.northOffset = xmp.heading;
               if (config.compass !== false) {
@@ -580,9 +583,9 @@ window.pannellum = (function(window, document, undefined) {
               }
             }
             if (xmp.horizonPitch !== null && xmp.horizonRoll !== null) {
-              if (specifiedPhotoSphereExcludes.indexOf('horizonPitch') < 0)
+              if (!specifiedPhotoSphereExcludes.includes('horizonPitch'))
                 {config.horizonPitch = xmp.horizonPitch;}
-              if (specifiedPhotoSphereExcludes.indexOf('horizonRoll') < 0)
+              if (!specifiedPhotoSphereExcludes.includes('horizonRoll'))
                 {config.horizonRoll = xmp.horizonRoll;}
             }
                 
@@ -608,7 +611,7 @@ window.pannellum = (function(window, document, undefined) {
     function anError(errorMsg) {
       if (errorMsg === undefined)
         {errorMsg = config.strings.genericWebGLError;}
-      infoDisplay.errorMsg.innerHTML = '<p>' + errorMsg + '</p>';
+      infoDisplay.errorMsg.innerHTML = `<p>${errorMsg}</p>`;
       controls.load.style.display = 'none';
       infoDisplay.load.box.style.display = 'none';
       infoDisplay.errorMsg.style.display = 'table';
@@ -636,15 +639,15 @@ window.pannellum = (function(window, document, undefined) {
  * @param {MouseEvent} event - Right click location
  */
     function aboutMessage(event) {
-      var pos = mousePosition(event);
-      aboutMsg.style.left = pos.x + 'px';
-      aboutMsg.style.top = pos.y + 'px';
+      const pos = mousePosition(event);
+      aboutMsg.style.left = `${pos.x}px`;
+      aboutMsg.style.top = `${pos.y}px`;
       clearTimeout(aboutMessage.t1);
       clearTimeout(aboutMessage.t2);
       aboutMsg.style.display = 'block';
       aboutMsg.style.opacity = 1;
-      aboutMessage.t1 = setTimeout(function() {aboutMsg.style.opacity = 0;}, 2000);
-      aboutMessage.t2 = setTimeout(function() {aboutMsg.style.display = 'none';}, 2500);
+      aboutMessage.t1 = setTimeout(() => {aboutMsg.style.opacity = 0;}, 2000);
+      aboutMessage.t2 = setTimeout(() => {aboutMsg.style.display = 'none';}, 2500);
       event.preventDefault();
     }
 
@@ -655,8 +658,8 @@ window.pannellum = (function(window, document, undefined) {
  * @returns {Object} Calculated X and Y coordinates
  */
     function mousePosition(event) {
-      var bounds = container.getBoundingClientRect();
-      var pos = {};
+      const bounds = container.getBoundingClientRect();
+      const pos = {};
       pos.x = event.clientX - bounds.left;
       pos.y = event.clientY - bounds.top;
       return pos;
@@ -680,13 +683,12 @@ window.pannellum = (function(window, document, undefined) {
       }
     
       // Calculate mouse position relative to top left of viewer container
-      var pos = mousePosition(event);
+      const pos = mousePosition(event);
 
       // Log pitch / yaw of mouse click when debugging / placing hot spots
       if (config.hotSpotDebug) {
-        var coords = mouseEventToCoords(event);
-        console.log('Pitch: ' + coords[0] + ', Yaw: ' + coords[1] + ', Center Pitch: ' +
-            config.pitch + ', Center Yaw: ' + config.yaw + ', HFOV: ' + config.hfov);
+        const coords = mouseEventToCoords(event);
+        console.log(`Pitch: ${coords[0]}, Yaw: ${coords[1]}, Center Pitch: ${config.pitch}, Center Yaw: ${config.yaw}, HFOV: ${config.hfov}`);
       }
     
       // Turn off auto-rotation if enabled
@@ -722,7 +724,7 @@ window.pannellum = (function(window, document, undefined) {
       if (config.minHfov === config.hfov) {
         _this.setHfov(origHfov, 1000);
       } else {
-        var coords = mouseEventToCoords(event);
+        const coords = mouseEventToCoords(event);
         _this.lookAt(coords[0], coords[1], config.minHfov, 1000);
       }
     }
@@ -734,19 +736,18 @@ window.pannellum = (function(window, document, undefined) {
  * @returns {number[]} [pitch, yaw]
  */
     function mouseEventToCoords(event) {
-      var pos = mousePosition(event);
-      var canvas = renderer.getCanvas();
-      var canvasWidth = canvas.clientWidth,
-        canvasHeight = canvas.clientHeight;
-      var x = pos.x / canvasWidth * 2 - 1;
-      var y = (1 - pos.y / canvasHeight * 2) * canvasHeight / canvasWidth;
-      var focal = 1 / Math.tan(config.hfov * Math.PI / 360);
-      var s = Math.sin(config.pitch * Math.PI / 180);
-      var c = Math.cos(config.pitch * Math.PI / 180);
-      var a = focal * c - y * s;
-      var root = Math.sqrt(x*x + a*a);
-      var pitch = Math.atan((y * c + focal * s) / root) * 180 / Math.PI;
-      var yaw = Math.atan2(x / root, a / root) * 180 / Math.PI + config.yaw;
+      const pos = mousePosition(event);
+      const canvas = renderer.getCanvas();
+      const canvasWidth = canvas.clientWidth, canvasHeight = canvas.clientHeight;
+      const x = pos.x / canvasWidth * 2 - 1;
+      const y = (1 - pos.y / canvasHeight * 2) * canvasHeight / canvasWidth;
+      const focal = 1 / Math.tan(config.hfov * Math.PI / 360);
+      const s = Math.sin(config.pitch * Math.PI / 180);
+      const c = Math.cos(config.pitch * Math.PI / 180);
+      const a = focal * c - y * s;
+      const root = Math.sqrt(x*x + a*a);
+      const pitch = Math.atan((y * c + focal * s) / root) * 180 / Math.PI;
+      let yaw = Math.atan2(x / root, a / root) * 180 / Math.PI + config.yaw;
       if (yaw < -180)
         {yaw += 360;}
       if (yaw > 180)
@@ -762,18 +763,17 @@ window.pannellum = (function(window, document, undefined) {
     function onDocumentMouseMove(event) {
       if (isUserInteracting && loaded) {
         latestInteraction = Date.now();
-        var canvas = renderer.getCanvas();
-        var canvasWidth = canvas.clientWidth,
-          canvasHeight = canvas.clientHeight;
-        var pos = mousePosition(event);
+        const canvas = renderer.getCanvas();
+        const canvasWidth = canvas.clientWidth, canvasHeight = canvas.clientHeight;
+        const pos = mousePosition(event);
         //TODO: This still isn't quite right
-        var yaw = ((Math.atan(onPointerDownPointerX / canvasWidth * 2 - 1) - Math.atan(pos.x / canvasWidth * 2 - 1)) * 180 / Math.PI * config.hfov / 90) + onPointerDownYaw;
+        const yaw = ((Math.atan(onPointerDownPointerX / canvasWidth * 2 - 1) - Math.atan(pos.x / canvasWidth * 2 - 1)) * 180 / Math.PI * config.hfov / 90) + onPointerDownYaw;
         speed.yaw = (yaw - config.yaw) % 360 * 0.2;
         config.yaw = yaw;
         
-        var vfov = 2 * Math.atan(Math.tan(config.hfov/360*Math.PI) * canvasHeight / canvasWidth) * 180 / Math.PI;
+        const vfov = 2 * Math.atan(Math.tan(config.hfov/360*Math.PI) * canvasHeight / canvasWidth) * 180 / Math.PI;
         
-        var pitch = ((Math.atan(pos.y / canvasHeight * 2 - 1) - Math.atan(onPointerDownPointerY / canvasHeight * 2 - 1)) * 180 / Math.PI * vfov / 90) + onPointerDownPitch;
+        const pitch = ((Math.atan(pos.y / canvasHeight * 2 - 1) - Math.atan(onPointerDownPointerY / canvasHeight * 2 - 1)) * 180 / Math.PI * vfov / 90) + onPointerDownPitch;
         speed.pitch = (pitch - config.pitch) * 0.2;
         config.pitch = pitch;
       }
@@ -821,14 +821,14 @@ window.pannellum = (function(window, document, undefined) {
       speed.hfov = 0;
 
       // Calculate touch position relative to top left of viewer container
-      var pos0 = mousePosition(event.targetTouches[0]);
+      const pos0 = mousePosition(event.targetTouches[0]);
 
       onPointerDownPointerX = pos0.x;
       onPointerDownPointerY = pos0.y;
     
       if (event.targetTouches.length == 2) {
         // Down pointer is the center of the two fingers
-        var pos1 = mousePosition(event.targetTouches[1]);
+        const pos1 = mousePosition(event.targetTouches[1]);
         onPointerDownPointerX += (pos1.x - pos0.x) * 0.5;
         onPointerDownPointerY += (pos1.y - pos0.y) * 0.5;
         onPointerDownPointerDist = Math.sqrt((pos0.x - pos1.x) * (pos0.x - pos1.x) +
@@ -861,15 +861,15 @@ window.pannellum = (function(window, document, undefined) {
         latestInteraction = Date.now();
       }
       if (isUserInteracting && loaded) {
-        var pos0 = mousePosition(event.targetTouches[0]);
-        var clientX = pos0.x;
-        var clientY = pos0.y;
+        const pos0 = mousePosition(event.targetTouches[0]);
+        let clientX = pos0.x;
+        let clientY = pos0.y;
         
         if (event.targetTouches.length == 2 && onPointerDownPointerDist != -1) {
-          var pos1 = mousePosition(event.targetTouches[1]);
+          const pos1 = mousePosition(event.targetTouches[1]);
           clientX += (pos1.x - pos0.x) * 0.5;
           clientY += (pos1.y - pos0.y) * 0.5;
-          var clientDist = Math.sqrt((pos0.x - pos1.x) * (pos0.x - pos1.x) +
+          const clientDist = Math.sqrt((pos0.x - pos1.x) * (pos0.x - pos1.x) +
                                        (pos0.y - pos1.y) * (pos0.y - pos1.y));
           setHfov(config.hfov + (onPointerDownPointerDist - clientDist) * 0.1);
           onPointerDownPointerDist = clientDist;
@@ -882,13 +882,13 @@ window.pannellum = (function(window, document, undefined) {
         //
         // Currently this seems to *roughly* keep initial drag/pan start position close to
         // the user's finger while panning regardless of zoom level / config.hfov value.
-        var touchmovePanSpeedCoeff = (config.hfov / 360) * config.touchPanSpeedCoeffFactor;
+        const touchmovePanSpeedCoeff = (config.hfov / 360) * config.touchPanSpeedCoeffFactor;
 
-        var yaw = (onPointerDownPointerX - clientX) * touchmovePanSpeedCoeff + onPointerDownYaw;
+        const yaw = (onPointerDownPointerX - clientX) * touchmovePanSpeedCoeff + onPointerDownYaw;
         speed.yaw = (yaw - config.yaw) % 360 * 0.2;
         config.yaw = yaw;
 
-        var pitch = (clientY - onPointerDownPointerY) * touchmovePanSpeedCoeff + onPointerDownPitch;
+        const pitch = (clientY - onPointerDownPointerY) * touchmovePanSpeedCoeff + onPointerDownPitch;
         speed.pitch = (pitch - config.pitch) * 0.2;
         config.pitch = pitch;
       }
@@ -909,8 +909,7 @@ window.pannellum = (function(window, document, undefined) {
       fireEvent('touchend', event);
     }
 
-    var pointerIDs = [],
-      pointerCoordinates = [];
+    let pointerIDs = [], pointerCoordinates = [];
     /**
  * Event handler for touch starts in IE / Edge.
  * @private
@@ -933,7 +932,7 @@ window.pannellum = (function(window, document, undefined) {
  */
     function onDocumentPointerMove(event) {
       if (event.pointerType == 'touch') {
-        for (var i = 0; i < pointerIDs.length; i++) {
+        for (let i = 0; i < pointerIDs.length; i++) {
           if (event.pointerId == pointerIDs[i]) {
             pointerCoordinates[i].clientX = event.clientX;
             pointerCoordinates[i].clientY = event.clientY;
@@ -953,8 +952,8 @@ window.pannellum = (function(window, document, undefined) {
  */
     function onDocumentPointerUp(event) {
       if (event.pointerType == 'touch') {
-        var defined = false;
-        for (var i = 0; i < pointerIDs.length; i++) {
+        let defined = false;
+        for (let i = 0; i < pointerIDs.length; i++) {
           if (event.pointerId == pointerIDs[i])
             {pointerIDs[i] = undefined;}
           if (pointerIDs[i])
@@ -1017,10 +1016,10 @@ window.pannellum = (function(window, document, undefined) {
       config.roll = 0;
 
       // Record key pressed
-      var keynumber = event.which || event.keycode;
+      const keynumber = event.which || event.keycode;
 
       // Override default action for keys that are used
-      if (config.capturedKeyNumbers.indexOf(keynumber) < 0)
+      if (!config.capturedKeyNumbers.includes(keynumber))
         {return;}
       event.preventDefault();
     
@@ -1041,7 +1040,7 @@ window.pannellum = (function(window, document, undefined) {
  * @private
  */
     function clearKeys() {
-      for (var i = 0; i < 10; i++) {
+      for (let i = 0; i < 10; i++) {
         keysDown[i] = false;
       }
     }
@@ -1053,10 +1052,10 @@ window.pannellum = (function(window, document, undefined) {
  */
     function onDocumentKeyUp(event) {
     // Record key pressed
-      var keynumber = event.which || event.keycode;
+      const keynumber = event.which || event.keycode;
     
       // Override default action for keys that are used
-      if (config.capturedKeyNumbers.indexOf(keynumber) < 0)
+      if (!config.capturedKeyNumbers.includes(keynumber))
         {return;}
       event.preventDefault();
     
@@ -1071,7 +1070,7 @@ window.pannellum = (function(window, document, undefined) {
  * @param {boolean} value - Whether or not key is pressed.
  */
     function changeKey(keynumber, value) {
-      var keyChanged = false;
+      let keyChanged = false;
       switch (keynumber) {
         // If minus key is released
         case 109: case 189: case 17: case 173:
@@ -1145,13 +1144,13 @@ window.pannellum = (function(window, document, undefined) {
         return;
       }
 
-      var isKeyDown = false;
+      let isKeyDown = false;
 
-      var prevPitch = config.pitch;
-      var prevYaw = config.yaw;
-      var prevZoom = config.hfov;
+      let prevPitch = config.pitch;
+      let prevYaw = config.yaw;
+      let prevZoom = config.hfov;
     
-      var newTime;
+      let newTime;
       if (typeof performance !== 'undefined' && performance.now()) {
         newTime = performance.now();
       } else {
@@ -1160,7 +1159,7 @@ window.pannellum = (function(window, document, undefined) {
       if (prevTime === undefined) {
         prevTime = newTime;
       }
-      var diff = (newTime - prevTime) * config.hfov / 1700;
+      let diff = (newTime - prevTime) * config.hfov / 1700;
       diff = Math.min(diff, 1.0);
     
       // If minus key is down
@@ -1207,12 +1206,12 @@ window.pannellum = (function(window, document, undefined) {
         {latestInteraction = Date.now();}
 
       // If auto-rotate
-      var inactivityInterval = Date.now() - latestInteraction;
+      const inactivityInterval = Date.now() - latestInteraction;
       if (config.autoRotate) {
         // Pan
         if (newTime - prevTime > 0.001) {
-          var timeDiff = (newTime - prevTime) / 1000;
-          var yawDiff = (speed.yaw / timeDiff * diff - config.autoRotate * 0.2) * timeDiff;
+          const timeDiff = (newTime - prevTime) / 1000;
+          let yawDiff = (speed.yaw / timeDiff * diff - config.autoRotate * 0.2) * timeDiff;
           yawDiff = (-config.autoRotate > 0 ? 1 : -1) * Math.min(Math.abs(config.autoRotate * timeDiff), Math.abs(yawDiff));
           config.yaw += yawDiff;
         }
@@ -1245,7 +1244,7 @@ window.pannellum = (function(window, document, undefined) {
       // "Inertia"
       if (diff > 0 && !config.autoRotate) {
         // "Friction"
-        var friction = 0.85;
+        const friction = 0.85;
         
         // Yaw
         if (!keysDown[4] && !keysDown[5] && !keysDown[8] && !keysDown[9] && !animatedMove.yaw) {
@@ -1268,7 +1267,7 @@ window.pannellum = (function(window, document, undefined) {
         speed.hfov = speed.hfov * 0.8 + (config.hfov - prevZoom) / diff * 0.2;
         
         // Limit speed
-        var maxSpeed = config.autoRotate ? Math.abs(config.autoRotate) : 5;
+        const maxSpeed = config.autoRotate ? Math.abs(config.autoRotate) : 5;
         speed.yaw = Math.min(maxSpeed, Math.max(speed.yaw, -maxSpeed));
         speed.pitch = Math.min(maxSpeed, Math.max(speed.pitch, -maxSpeed));
         speed.hfov = Math.min(maxSpeed, Math.max(speed.hfov, -maxSpeed));
@@ -1292,16 +1291,15 @@ window.pannellum = (function(window, document, undefined) {
  * @private
  */
     function animateMove(axis) {
-      var t = animatedMove[axis];
-      var normTime = Math.min(1, Math.max((Date.now() - t.startTime) / 1000 / (t.duration / 1000), 0));
-      var result = t.startPosition + config.animationTimingFunction(normTime) * (t.endPosition - t.startPosition);
+      const t = animatedMove[axis];
+      const normTime = Math.min(1, Math.max((Date.now() - t.startTime) / 1000 / (t.duration / 1000), 0));
+      let result = t.startPosition + config.animationTimingFunction(normTime) * (t.endPosition - t.startPosition);
       if ((t.endPosition > t.startPosition && result >= t.endPosition) ||
         (t.endPosition < t.startPosition && result <= t.endPosition) ||
         t.endPosition === t.startPosition) {
         result = t.endPosition;
         speed[axis] = 0;
-        var callback = animatedMove[axis].callback,
-          callbackArgs = animatedMove[axis].callbackArgs;
+        const callback = animatedMove[axis].callback, callbackArgs = animatedMove[axis].callbackArgs;
         delete animatedMove[axis];
         if (typeof callback === 'function')
           {callback(callbackArgs);}
@@ -1374,10 +1372,10 @@ window.pannellum = (function(window, document, undefined) {
       } else {
         animating = false;
         prevTime = undefined;
-        var autoRotateStartTime = config.autoRotateInactivityDelay -
+        const autoRotateStartTime = config.autoRotateInactivityDelay -
             (Date.now() - latestInteraction);
         if (autoRotateStartTime > 0) {
-          autoRotateStart = setTimeout(function() {
+          autoRotateStart = setTimeout(() => {
             config.autoRotate = autoRotateSpeed;
             _this.lookAt(origPitch, undefined, origHfov, 3000);
             animateInit();
@@ -1395,7 +1393,7 @@ window.pannellum = (function(window, document, undefined) {
  * @private
  */
     function render() {
-      var tmpyaw;
+      let tmpyaw;
 
       if (loaded) {
         if (config.yaw > 180) {
@@ -1408,13 +1406,12 @@ window.pannellum = (function(window, document, undefined) {
         tmpyaw = config.yaw;
 
         // Optionally avoid showing background (empty space) on left or right by adapting min/max yaw
-        var hoffcut = 0,
-          voffcut = 0;
+        let hoffcut = 0, voffcut = 0;
         if (config.avoidShowingBackground) {
-          var canvas = renderer.getCanvas(),
-            hfov2 = config.hfov / 2,
-            vfov2 = Math.atan2(Math.tan(hfov2 / 180 * Math.PI), (canvas.width / canvas.height)) * 180 / Math.PI,
-            transposed = config.vaov > config.haov;
+          var canvas = renderer.getCanvas();
+          const hfov2 = config.hfov / 2;
+          const vfov2 = Math.atan2(Math.tan(hfov2 / 180 * Math.PI), (canvas.width / canvas.height)) * 180 / Math.PI;
+          const transposed = config.vaov > config.haov;
           if (transposed) {
             voffcut = vfov2 * (1 - Math.min(Math.cos((config.pitch - hfov2) / 180 * Math.PI),
               Math.cos((config.pitch + hfov2) / 180 * Math.PI)));
@@ -1425,9 +1422,10 @@ window.pannellum = (function(window, document, undefined) {
         }
 
         // Ensure the yaw is within min and max allowed
-        var yawRange = config.maxYaw - config.minYaw,
-          minYaw = -180,
-          maxYaw = 180;
+        const yawRange = config.maxYaw - config.minYaw;
+
+        let minYaw = -180;
+        let maxYaw = 180;
         if (yawRange < 360) {
           minYaw = config.minYaw + config.hfov / 2 + hoffcut;
           maxYaw = config.maxYaw - config.hfov / 2 - hoffcut;
@@ -1437,7 +1435,7 @@ window.pannellum = (function(window, document, undefined) {
           }
           config.yaw = Math.max(minYaw, Math.min(maxYaw, config.yaw));
         }
-        
+
         // Check if we autoRotate in a limited by min and max yaw
         // If so reverse direction
         if (config.autoRotate !== false && tmpyaw != config.yaw &&
@@ -1447,11 +1445,10 @@ window.pannellum = (function(window, document, undefined) {
 
         // Ensure the calculated pitch is within min and max allowed
         var canvas = renderer.getCanvas();
-        var vfov = 2 * Math.atan(Math.tan(config.hfov / 180 * Math.PI * 0.5) /
+        const vfov = 2 * Math.atan(Math.tan(config.hfov / 180 * Math.PI * 0.5) /
             (canvas.width / canvas.height)) / Math.PI * 180;
-        var minPitch = config.minPitch + vfov / 2,
-          maxPitch = config.maxPitch - vfov / 2;
-        var pitchRange = config.maxPitch - config.minPitch;
+        let minPitch = config.minPitch + vfov / 2, maxPitch = config.maxPitch - vfov / 2;
+        const pitchRange = config.maxPitch - config.minPitch;
         if (pitchRange < vfov) {
           // Lock pitch to average of min and max pitch when both can be seen at once
           minPitch = maxPitch = (minPitch + maxPitch) / 2;
@@ -1461,17 +1458,17 @@ window.pannellum = (function(window, document, undefined) {
         if (isNaN(maxPitch))
           {maxPitch = 90;}
         config.pitch = Math.max(minPitch, Math.min(maxPitch, config.pitch));
-        
+
         renderer.render(config.pitch * Math.PI / 180, config.yaw * Math.PI / 180, config.hfov * Math.PI / 180, { roll: config.roll * Math.PI / 180 });
-        
+
         renderHotSpots();
-        
+
         // Update compass
         if (config.compass) {
-          compass.style.transform = 'rotate(' + (-config.yaw - config.northOffset) + 'deg)';
-          compass.style.webkitTransform = 'rotate(' + (-config.yaw - config.northOffset) + 'deg)';
+          compass.style.transform = `rotate(${-config.yaw - config.northOffset}deg)`;
+          compass.style.webkitTransform = `rotate(${-config.yaw - config.northOffset}deg)`;
         }
-        
+
         if (config.onRender) {
           config.onRender();
         }
@@ -1487,39 +1484,41 @@ window.pannellum = (function(window, document, undefined) {
  * @param {Number} y - Y value
  * @param {Number} z - Z value
  */
-    function Quaternion(w, x, y, z) {
-      this.w = w;
-      this.x = x;
-      this.y = y;
-      this.z = z;
+    class Quaternion {
+      constructor(w, x, y, z) {
+        this.w = w;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+      }
+
+      /**
+   * Multiplies quaternions.
+   * @private
+   * @param {Quaternion} q - Quaternion to multiply
+   * @returns {Quaternion} Result of multiplication
+   */
+      multiply(q) {
+        return new Quaternion(this.w*q.w - this.x*q.x - this.y*q.y - this.z*q.z,
+          this.x*q.w + this.w*q.x + this.y*q.z - this.z*q.y,
+          this.y*q.w + this.w*q.y + this.z*q.x - this.x*q.z,
+          this.z*q.w + this.w*q.z + this.x*q.y - this.y*q.x);
+      }
+
+      /**
+   * Converts quaternion to Euler angles.
+   * @private
+   * @returns {Number[]} [phi angle, theta angle, psi angle]
+   */
+      toEulerAngles() {
+        const phi = Math.atan2(2 * (this.w * this.x + this.y * this.z),
+                  1 - 2 * (this.x * this.x + this.y * this.y)),
+              theta = Math.asin(2 * (this.w * this.y - this.z * this.x)),
+              psi = Math.atan2(2 * (this.w * this.z + this.x * this.y),
+                1 - 2 * (this.y * this.y + this.z * this.z));
+        return [phi, theta, psi];
+      }
     }
-
-    /**
- * Multiplies quaternions.
- * @private
- * @param {Quaternion} q - Quaternion to multiply
- * @returns {Quaternion} Result of multiplication
- */
-    Quaternion.prototype.multiply = function(q) {
-      return new Quaternion(this.w*q.w - this.x*q.x - this.y*q.y - this.z*q.z,
-        this.x*q.w + this.w*q.x + this.y*q.z - this.z*q.y,
-        this.y*q.w + this.w*q.y + this.z*q.x - this.x*q.z,
-        this.z*q.w + this.w*q.z + this.x*q.y - this.y*q.x);
-    };
-
-    /**
- * Converts quaternion to Euler angles.
- * @private
- * @returns {Number[]} [phi angle, theta angle, psi angle]
- */
-    Quaternion.prototype.toEulerAngles = function() {
-      var phi = Math.atan2(2 * (this.w * this.x + this.y * this.z),
-          1 - 2 * (this.x * this.x + this.y * this.y)),
-        theta = Math.asin(2 * (this.w * this.y - this.z * this.x)),
-        psi = Math.atan2(2 * (this.w * this.z + this.x * this.y),
-          1 - 2 * (this.y * this.y + this.z * this.z));
-      return [phi, theta, psi];
-    };
 
     /**
  * Converts device orientation API Tait-Bryan angles to a quaternion.
@@ -1530,11 +1529,10 @@ window.pannellum = (function(window, document, undefined) {
  * @returns {Quaternion} Orientation quaternion
  */
     function taitBryanToQuaternion(alpha, beta, gamma) {
-      var r = [beta ? beta * Math.PI / 180 / 2 : 0,
+      const r = [beta ? beta * Math.PI / 180 / 2 : 0,
         gamma ? gamma * Math.PI / 180 / 2 : 0,
         alpha ? alpha * Math.PI / 180 / 2 : 0];
-      var c = [Math.cos(r[0]), Math.cos(r[1]), Math.cos(r[2])],
-        s = [Math.sin(r[0]), Math.sin(r[1]), Math.sin(r[2])];
+      const c = [Math.cos(r[0]), Math.cos(r[1]), Math.cos(r[2])], s = [Math.sin(r[0]), Math.sin(r[1]), Math.sin(r[2])];
 
       return new Quaternion(c[0]*c[1]*c[2] - s[0]*s[1]*s[2],
         s[0]*c[1]*c[2] - c[0]*s[1]*s[2],
@@ -1553,11 +1551,11 @@ window.pannellum = (function(window, document, undefined) {
  */
     function computeQuaternion(alpha, beta, gamma) {
     // Convert Tait-Bryan angles to quaternion
-      var quaternion = taitBryanToQuaternion(alpha, beta, gamma);
+      let quaternion = taitBryanToQuaternion(alpha, beta, gamma);
       // Apply world transform
       quaternion = quaternion.multiply(new Quaternion(Math.sqrt(0.5), -Math.sqrt(0.5), 0, 0));
       // Apply screen transform
-      var angle = window.orientation ? -window.orientation * Math.PI / 180 / 2 : 0;
+      const angle = window.orientation ? -window.orientation * Math.PI / 180 / 2 : 0;
       return quaternion.multiply(new Quaternion(Math.cos(angle), 0, -Math.sin(angle), 0));
     }
 
@@ -1567,7 +1565,7 @@ window.pannellum = (function(window, document, undefined) {
  * @param {DeviceOrientationEvent} event - Device orientation event.
  */
     function orientationListener(e) {
-      var q = computeQuaternion(e.alpha, e.beta, e.gamma).toEulerAngles();
+      const q = computeQuaternion(e.alpha, e.beta, e.gamma).toEulerAngles();
       if (typeof(orientation) === 'number' && orientation < 10) {
         // This kludge is necessary because iOS sometimes provides a few stale
         // device orientation events when the listener is removed and then
@@ -1592,7 +1590,7 @@ window.pannellum = (function(window, document, undefined) {
  */
     function renderInit() {
       try {
-        var params = {};
+        const params = {};
         if (config.horizonPitch !== undefined)
           {params.horizonPitch = config.horizonPitch * Math.PI / 180;}
         if (config.horizonRoll !== undefined)
@@ -1630,9 +1628,9 @@ window.pannellum = (function(window, document, undefined) {
       if (config.sceneFadeDuration && renderer.fadeImg !== undefined) {
         renderer.fadeImg.style.opacity = 0;
         // Remove image
-        var fadeImg = renderer.fadeImg;
+        const fadeImg = renderer.fadeImg;
         delete renderer.fadeImg;
-        setTimeout(function() {
+        setTimeout(() => {
           renderContainer.removeChild(fadeImg);
           fireEvent('scenechangefadedone');
         }, config.sceneFadeDuration);
@@ -1671,26 +1669,26 @@ window.pannellum = (function(window, document, undefined) {
       hs.pitch = Number(hs.pitch) || 0;
       hs.yaw = Number(hs.yaw) || 0;
 
-      var div = document.createElement('div');
+      const div = document.createElement('div');
       div.className = 'pnlm-hotspot-base';
       if (hs.cssClass)
-        {div.className += ' ' + hs.cssClass;}
+        {div.className += ` ${hs.cssClass}`;}
       else
-        {div.className += ' pnlm-hotspot pnlm-sprite pnlm-' + escapeHTML(hs.type);}
+        {div.className += ` pnlm-hotspot pnlm-sprite pnlm-${escapeHTML(hs.type)}`;}
 
-      var span = document.createElement('span');
+      const span = document.createElement('span');
       if (hs.text)
         {span.innerHTML = escapeHTML(hs.text);}
 
-      var a;
+      let a;
       if (hs.video) {
-        var video = document.createElement('video'),
-          p = hs.video;
+        const video = document.createElement('video');
+        var p = hs.video;
         if (config.basePath && !absoluteURL(p))
           {p = config.basePath + p;}
         video.src = sanitizeURL(p);
         video.controls = true;
-        video.style.width = hs.width + 'px';
+        video.style.width = `${hs.width}px`;
         renderContainer.appendChild(div);
         span.appendChild(video);
       } else if (hs.image) {
@@ -1701,9 +1699,9 @@ window.pannellum = (function(window, document, undefined) {
         a.href = sanitizeURL(hs.URL ? hs.URL : p);
         a.target = '_blank';
         span.appendChild(a);
-        var image = document.createElement('img');
+        const image = document.createElement('img');
         image.src = sanitizeURL(p);
-        image.style.width = hs.width + 'px';
+        image.style.width = `${hs.width}px`;
         image.style.paddingTop = '5px';
         renderContainer.appendChild(div);
         a.appendChild(image);
@@ -1718,7 +1716,7 @@ window.pannellum = (function(window, document, undefined) {
         a.appendChild(div);
       } else {
         if (hs.sceneId) {
-          div.onclick = div.ontouchend = function() {
+          div.onclick = div.ontouchend = () => {
             if (!div.clicked) {
               div.clicked = true;
               loadScene(hs.sceneId, hs.targetPitch, hs.targetYaw, hs.targetHfov);
@@ -1736,19 +1734,19 @@ window.pannellum = (function(window, document, undefined) {
       } else if (hs.text || hs.video || hs.image) {
         div.classList.add('pnlm-tooltip');
         div.appendChild(span);
-        span.style.width = span.scrollWidth - 20 + 'px';
-        span.style.marginLeft = -(span.scrollWidth - div.offsetWidth) / 2 + 'px';
-        span.style.marginTop = -span.scrollHeight - 12 + 'px';
+        span.style.width = `${span.scrollWidth - 20}px`;
+        span.style.marginLeft = `${-(span.scrollWidth - div.offsetWidth) / 2}px`;
+        span.style.marginTop = `${-span.scrollHeight - 12}px`;
       }
       if (hs.clickHandlerFunc) {
-        div.addEventListener('click', function(e) {
+        div.addEventListener('click', e => {
           hs.clickHandlerFunc(e, hs.clickHandlerArgs);
         }, 'false');
         div.className += ' pnlm-pointer';
         span.className += ' pnlm-pointer';
       }
       hs.div = div;
-    };
+    }
 
     /**
  * Creates hot spot elements for the current scene.
@@ -1761,9 +1759,7 @@ window.pannellum = (function(window, document, undefined) {
         config.hotSpots = [];
       } else {
         // Sort by pitch so tooltip is never obscured by another hot spot
-        config.hotSpots = config.hotSpots.sort(function(a, b) {
-          return a.pitch < b.pitch;
-        });
+        config.hotSpots = config.hotSpots.sort((a, b) => a.pitch < b.pitch);
         config.hotSpots.forEach(createHotSpot);
       }
       hotspotsCreated = true;
@@ -1775,12 +1771,12 @@ window.pannellum = (function(window, document, undefined) {
  * @private
  */
     function destroyHotSpots() {
-      var hs = config.hotSpots;
+      const hs = config.hotSpots;
       hotspotsCreated = false;
       delete config.hotSpots;
       if (hs) {
-        for (var i = 0; i < hs.length; i++) {
-          var current = hs[i].div;
+        for (let i = 0; i < hs.length; i++) {
+          let current = hs[i].div;
           while (current.parentNode != renderContainer) {
             current = current.parentNode;
           }
@@ -1795,37 +1791,28 @@ window.pannellum = (function(window, document, undefined) {
  * @private
  */
     function renderHotSpot(hs) {
-      var hsPitchSin = Math.sin(hs.pitch * Math.PI / 180),
-        hsPitchCos = Math.cos(hs.pitch * Math.PI / 180),
-        configPitchSin = Math.sin(config.pitch * Math.PI / 180),
-        configPitchCos = Math.cos(config.pitch * Math.PI / 180),
-        yawCos = Math.cos((-hs.yaw + config.yaw) * Math.PI / 180);
-      var z = hsPitchSin * configPitchSin + hsPitchCos * yawCos * configPitchCos;
+      const hsPitchSin = Math.sin(hs.pitch * Math.PI / 180), hsPitchCos = Math.cos(hs.pitch * Math.PI / 180), configPitchSin = Math.sin(config.pitch * Math.PI / 180), configPitchCos = Math.cos(config.pitch * Math.PI / 180), yawCos = Math.cos((-hs.yaw + config.yaw) * Math.PI / 180);
+      const z = hsPitchSin * configPitchSin + hsPitchCos * yawCos * configPitchCos;
       if ((hs.yaw <= 90 && hs.yaw > -90 && z <= 0) ||
       ((hs.yaw > 90 || hs.yaw <= -90) && z <= 0)) {
         hs.div.style.visibility = 'hidden';
       } else {
-        var yawSin = Math.sin((-hs.yaw + config.yaw) * Math.PI / 180),
-          hfovTan = Math.tan(config.hfov * Math.PI / 360);
+        const yawSin = Math.sin((-hs.yaw + config.yaw) * Math.PI / 180), hfovTan = Math.tan(config.hfov * Math.PI / 360);
         hs.div.style.visibility = 'visible';
         // Subpixel rendering doesn't work in Firefox
         // https://bugzilla.mozilla.org/show_bug.cgi?id=739176
-        var canvas = renderer.getCanvas(),
-          canvasWidth = canvas.clientWidth,
-          canvasHeight = canvas.clientHeight;
-        var coord = [-canvasWidth / hfovTan * yawSin * hsPitchCos / z / 2,
+        const canvas = renderer.getCanvas(), canvasWidth = canvas.clientWidth, canvasHeight = canvas.clientHeight;
+        let coord = [-canvasWidth / hfovTan * yawSin * hsPitchCos / z / 2,
           -canvasWidth / hfovTan * (hsPitchSin * configPitchCos -
             hsPitchCos * yawCos * configPitchSin) / z / 2];
         // Apply roll
-        var rollSin = Math.sin(config.roll * Math.PI / 180),
-          rollCos = Math.cos(config.roll * Math.PI / 180);
+        const rollSin = Math.sin(config.roll * Math.PI / 180), rollCos = Math.cos(config.roll * Math.PI / 180);
         coord = [coord[0] * rollCos - coord[1] * rollSin,
           coord[0] * rollSin + coord[1] * rollCos];
         // Apply transform
         coord[0] += (canvasWidth - hs.div.offsetWidth) / 2;
         coord[1] += (canvasHeight - hs.div.offsetHeight) / 2;
-        var transform = 'translate(' + coord[0] + 'px, ' + coord[1] +
-            'px) translateZ(9999px) rotate(' + config.roll + 'deg)';
+        const transform = `translate(${coord[0]}px, ${coord[1]}px) translateZ(9999px) rotate(${config.roll}deg)`;
         hs.div.style.webkitTransform = transform;
         hs.div.style.MozTransform = transform;
         hs.div.style.transform = transform;
@@ -1847,8 +1834,8 @@ window.pannellum = (function(window, document, undefined) {
  */
     function mergeConfig(sceneId) {
       config = {};
-      var k, s;
-      var photoSphereExcludes = ['haov', 'vaov', 'vOffset', 'northOffset', 'horizonPitch', 'horizonRoll'];
+      let k, s;
+      const photoSphereExcludes = ['haov', 'vaov', 'vOffset', 'northOffset', 'horizonPitch', 'horizonRoll'];
       specifiedPhotoSphereExcludes = [];
     
       // Merge default config
@@ -1869,7 +1856,7 @@ window.pannellum = (function(window, document, undefined) {
             }
           } else {
             config[k] = initialConfig.default[k];
-            if (photoSphereExcludes.indexOf(k) >= 0) {
+            if (photoSphereExcludes.includes(k)) {
               specifiedPhotoSphereExcludes.push(k);
             }
           }
@@ -1878,7 +1865,7 @@ window.pannellum = (function(window, document, undefined) {
     
       // Merge current scene config
       if ((sceneId !== null) && (sceneId !== '') && (initialConfig.scenes) && (initialConfig.scenes[sceneId])) {
-        var scene = initialConfig.scenes[sceneId];
+        const scene = initialConfig.scenes[sceneId];
         for (k in scene) {
           if (scene.hasOwnProperty(k)) {
             if (k == 'strings') {
@@ -1889,7 +1876,7 @@ window.pannellum = (function(window, document, undefined) {
               }
             } else {
               config[k] = scene[k];
-              if (photoSphereExcludes.indexOf(k) >= 0) {
+              if (photoSphereExcludes.includes(k)) {
                 specifiedPhotoSphereExcludes.push(k);
               }
             }
@@ -1909,7 +1896,7 @@ window.pannellum = (function(window, document, undefined) {
             }
           } else {
             config[k] = initialConfig[k];
-            if (photoSphereExcludes.indexOf(k) >= 0) {
+            if (photoSphereExcludes.includes(k)) {
               specifiedPhotoSphereExcludes.push(k);
             }
           }
@@ -1922,25 +1909,22 @@ window.pannellum = (function(window, document, undefined) {
  * @param {boolean} [isPreview] - Whether or not the preview is being displayed
  * @private
  */
-    function processOptions(isPreview) {
-      isPreview = isPreview ? isPreview : false;
-
+    function processOptions(isPreview = false) {
       // Process preview first so it always loads before the browser hits its
       // maximum number of connections to a server as can happen with cubic
       // panoramas
       if (isPreview && 'preview' in config) {
-        var p = config.preview;
+        let p = config.preview;
         if (config.basePath && !absoluteURL(p))
           {p = config.basePath + p;}
         preview = document.createElement('div');
         preview.className = 'pnlm-preview-img';
-        preview.style.backgroundImage = "url('" + sanitizeURLForCss(p) + "')";
+        preview.style.backgroundImage = `url('${sanitizeURLForCss(p)}')`;
         renderContainer.appendChild(preview);
       }
 
       // Handle different preview values
-      var title = config.title,
-        author = config.author;
+      const title = config.title, author = config.author;
       if (isPreview) {
         if ('previewTitle' in config)
           {config.title = config.previewTitle;}
@@ -1957,11 +1941,11 @@ window.pannellum = (function(window, document, undefined) {
         {infoDisplay.container.style.display = 'none';}
 
       // Fill in load button label and loading box text
-      controls.load.innerHTML = '<p>' + config.strings.loadButtonLabel + '</p>';
+      controls.load.innerHTML = `<p>${config.strings.loadButtonLabel}</p>`;
       infoDisplay.load.boxp.innerHTML = config.strings.loadingLabel;
 
       // Process other options
-      for (var key in config) {
+      for (const key in config) {
         if (config.hasOwnProperty(key)) {
           switch (key) {
             case 'title':
@@ -1975,11 +1959,11 @@ window.pannellum = (function(window, document, undefined) {
               break;
             
             case 'fallback':
-              var link = document.createElement('a');
+              const link = document.createElement('a');
               link.href = sanitizeURL(config[key]);
               link.target = '_blank';
               link.textContent = 'Click here to view this panorama in an alternative viewer.';
-              var message = document.createElement('p');
+              const message = document.createElement('p');
               message.textContent = 'Your browser does not support WebGL.';
               message.appendChild(document.createElement('br'));
               message.appendChild(link);
@@ -2148,7 +2132,7 @@ window.pannellum = (function(window, document, undefined) {
  */
     function constrainHfov(hfov) {
     // Keep field of view within bounds
-      var minHfov = config.minHfov;
+      let minHfov = config.minHfov;
       if (config.type == 'multires' && renderer) {
         minHfov = Math.min(minHfov, renderer.getCanvas().width / (config.multiRes.cubeResolution / 90 * 0.9));
       }
@@ -2157,7 +2141,7 @@ window.pannellum = (function(window, document, undefined) {
         console.log('HFOV bounds do not make sense (minHfov > maxHfov).');
         return config.hfov;
       }
-      var newHfov = config.hfov;
+      let newHfov = config.hfov;
       if (hfov < minHfov) {
         newHfov = minHfov;
       } else if (hfov > config.maxHfov) {
@@ -2167,7 +2151,7 @@ window.pannellum = (function(window, document, undefined) {
       }
       // Optionally avoid showing background (empty space) on top or bottom by adapting newHfov
       if (config.avoidShowingBackground && renderer) {
-        var canvas = renderer.getCanvas();
+        const canvas = renderer.getCanvas();
         newHfov = Math.min(newHfov,
           Math.atan(Math.tan((config.maxPitch - config.minPitch) / 360 * Math.PI) /
                                      canvas.height * canvas.width)
@@ -2225,16 +2209,16 @@ window.pannellum = (function(window, document, undefined) {
       animatedMove = {};
     
       // Set up fade if specified
-      var fadeImg, workingPitch, workingYaw, workingHfov;
+      let fadeImg, workingPitch, workingYaw, workingHfov;
       if (config.sceneFadeDuration && !fadeDone) {
-        var data = renderer.render(config.pitch * Math.PI / 180, config.yaw * Math.PI / 180, config.hfov * Math.PI / 180, { returnImage: true });
+        const data = renderer.render(config.pitch * Math.PI / 180, config.yaw * Math.PI / 180, config.hfov * Math.PI / 180, { returnImage: true });
         if (data !== undefined) {
           fadeImg = new Image();
           fadeImg.className = 'pnlm-fade-img';
-          fadeImg.style.transition = 'opacity ' + (config.sceneFadeDuration / 1000) + 's';
+          fadeImg.style.transition = `opacity ${config.sceneFadeDuration / 1000}s`;
           fadeImg.style.width = '100%';
           fadeImg.style.height = '100%';
-          fadeImg.onload = function() {
+          fadeImg.onload = () => {
             loadScene(sceneId, targetPitch, targetYaw, targetHfov, true);
           };
           fadeImg.src = data;
@@ -2359,9 +2343,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {boolean} `true` if a panorama is loaded, else `false`
  */
-    this.isLoaded = function() {
-      return Boolean(loaded);
-    };
+    this.isLoaded = () => Boolean(loaded);
 
     /**
  * Returns the pitch of the center of the view.
@@ -2369,9 +2351,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number} Pitch in degrees
  */
-    this.getPitch = function() {
-      return config.pitch;
-    };
+    this.getPitch = () => config.pitch;
 
     /**
  * Sets the pitch of the center of the view.
@@ -2407,9 +2387,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number[]} [minimum pitch, maximum pitch]
  */
-    this.getPitchBounds = function() {
-      return [config.minPitch, config.maxPitch];
-    };
+    this.getPitchBounds = () => [config.minPitch, config.maxPitch];
 
     /**
  * Set the minimum and maximum allowed pitches (in degrees).
@@ -2430,9 +2408,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number} Yaw in degrees
  */
-    this.getYaw = function() {
-      return config.yaw;
-    };
+    this.getYaw = () => config.yaw;
 
     /**
  * Sets the yaw of the center of the view.
@@ -2475,9 +2451,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number[]} [yaw pitch, maximum yaw]
  */
-    this.getYawBounds = function() {
-      return [config.minYaw, config.maxYaw];
-    };
+    this.getYawBounds = () => [config.minYaw, config.maxYaw];
 
     /**
  * Set the minimum and maximum allowed yaws (in degrees [-180, 180]).
@@ -2498,9 +2472,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number} Horizontal field of view in degrees
  */
-    this.getHfov = function() {
-      return config.hfov;
-    };
+    this.getHfov = () => config.hfov;
 
     /**
  * Sets the horizontal field of view.
@@ -2537,9 +2509,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number[]} [minimum hfov, maximum hfov]
  */
-    this.getHfovBounds = function() {
-      return [config.minHfov, config.maxHfov];
-    };
+    this.getHfovBounds = () => [config.minHfov, config.maxHfov];
 
     /**
  * Set the minimum and maximum allowed horizontal fields of view (in degrees).
@@ -2587,9 +2557,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number} North offset in degrees
  */
-    this.getNorthOffset = function() {
-      return config.northOffset;
-    };
+    this.getNorthOffset = () => config.northOffset;
 
     /**
  * Sets the panorama's north offset.
@@ -2610,9 +2578,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number} Horizon roll in degrees
  */
-    this.getHorizonRoll = function() {
-      return config.horizonRoll;
-    };
+    this.getHorizonRoll = () => config.horizonRoll;
 
     /**
  * Sets the panorama's horizon roll.
@@ -2634,9 +2600,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {number} Horizon pitch in degrees
  */
-    this.getHorizonPitch = function() {
-      return config.horizonPitch;
-    };
+    this.getHorizonPitch = () => config.horizonPitch;
 
     /**
  * Sets the panorama's horizon pitch.
@@ -2686,9 +2650,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {Renderer}
  */
-    this.getRenderer = function() {
-      return renderer;
-    };
+    this.getRenderer = () => renderer;
 
     /**
  * Sets update flag for dynamic content.
@@ -2713,9 +2675,7 @@ window.pannellum = (function(window, document, undefined) {
  * @param {MouseEvent} event - Document mouse down event.
  * @returns {number[]} [pitch, yaw]
  */
-    this.mouseEventToCoords = function(event) {
-      return mouseEventToCoords(event);
-    };
+    this.mouseEventToCoords = event => mouseEventToCoords(event);
 
     /**
  * Change scene being viewed.
@@ -2739,9 +2699,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {string} ID of current scene
  */
-    this.getScene = function() {
-      return config.scene;
-    };
+    this.getScene = () => config.scene;
 
     /**
  * Add a new scene.
@@ -2763,7 +2721,7 @@ window.pannellum = (function(window, document, undefined) {
  * @param {string} sceneId - The ID of the scene
  * @returns {boolean} False if the scene is the current scene or if the scene doesn't exists, else true
  */
-    this.removeScene = function(sceneId) {
+    this.removeScene = sceneId => {
       if (config.scene === sceneId || !initialConfig.scenes.hasOwnProperty(sceneId))
         {return false;}
       delete initialConfig.scenes[sceneId];
@@ -2787,9 +2745,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {Object} Configuration of current scene
  */
-    this.getConfig = function() {
-      return config;
-    };
+    this.getConfig = () => config;
 
     /**
  * Get viewer's container element.
@@ -2797,9 +2753,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {HTMLElement} Container `div` element
  */
-    this.getContainer = function() {
-      return container;
-    };
+    this.getContainer = () => container;
 
     /**
  * Add a new hot spot.
@@ -2816,7 +2770,7 @@ window.pannellum = (function(window, document, undefined) {
         config.hotSpots.push(hs);
       } else {
         // Tour
-        var id = sceneId !== undefined ? sceneId : config.scene;
+        const id = sceneId !== undefined ? sceneId : config.scene;
         if (initialConfig.scenes.hasOwnProperty(id)) {
           if (!initialConfig.scenes[id].hasOwnProperty('hotSpots')) {
             initialConfig.scenes[id].hotSpots = []; // Create hot spots array if needed
@@ -2845,7 +2799,7 @@ window.pannellum = (function(window, document, undefined) {
  * @param {string} [sceneId] - Removes hot spot from specified scene if provided, else from current scene
  * @returns {boolean} True if deletion is successful, else false
  */
-    this.removeHotSpot = function(hotSpotId, sceneId) {
+    this.removeHotSpot = (hotSpotId, sceneId) => {
       if (sceneId === undefined || config.scene == sceneId) {
         if (!config.hotSpots)
           {return false;}
@@ -2853,7 +2807,7 @@ window.pannellum = (function(window, document, undefined) {
           if (config.hotSpots[i].hasOwnProperty('id') &&
                 config.hotSpots[i].id === hotSpotId) {
             // Delete hot spot DOM elements
-            var current = config.hotSpots[i].div;
+            let current = config.hotSpots[i].div;
             while (current.parentNode != renderContainer)
               {current = current.parentNode;}
             renderContainer.removeChild(current);
@@ -2886,7 +2840,7 @@ window.pannellum = (function(window, document, undefined) {
  * @memberof Viewer
  * @instance
  */
-    this.resize = function() {
+    this.resize = () => {
       if (renderer)
         {onDocumentResize();}
     };
@@ -2897,9 +2851,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {boolean} True if a panorama is loaded, else false
  */
-    this.isLoaded = function() {
-      return loaded;
-    };
+    this.isLoaded = () => loaded;
 
     /**
  * Check if device orientation control is supported.
@@ -2907,16 +2859,14 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {boolean} True if supported, else false
  */
-    this.isOrientationSupported = function() {
-      return orientationSupport || false;
-    };
+    this.isOrientationSupported = () => orientationSupport || false;
 
     /**
  * Stop using device orientation.
  * @memberof Viewer
  * @instance
  */
-    this.stopOrientation = function() {
+    this.stopOrientation = () => {
       stopOrientation();
     };
 
@@ -2925,7 +2875,7 @@ window.pannellum = (function(window, document, undefined) {
  * @memberof Viewer
  * @instance
  */
-    this.startOrientation = function() {
+    this.startOrientation = () => {
       if (orientationSupport)
         {startOrientation();}
     };
@@ -2936,9 +2886,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @returns {boolean} True if active, else false
  */
-    this.isOrientationActive = function() {
-      return Boolean(orientation);
-    };
+    this.isOrientationActive = () => Boolean(orientation);
 
     /**
  * Subscribe listener to specified event.
@@ -2968,7 +2916,7 @@ window.pannellum = (function(window, document, undefined) {
         return this;
       }
       if (listener) {
-        var i = externalEventListeners[type].indexOf(listener);
+        const i = externalEventListeners[type].indexOf(listener);
         if (i >= 0) {
           // Remove listener if found
           externalEventListeners[type].splice(i, 1);
@@ -2992,7 +2940,7 @@ window.pannellum = (function(window, document, undefined) {
     function fireEvent(type) {
       if (type in externalEventListeners) {
         // Reverse iteration is useful, if event listener is removed inside its definition
-        for (var i = externalEventListeners[type].length; i > 0; i--) {
+        for (let i = externalEventListeners[type].length; i > 0; i--) {
           externalEventListeners[type][externalEventListeners[type].length - i].apply(null, [].slice.call(arguments, 1));
         }
       }
@@ -3003,7 +2951,7 @@ window.pannellum = (function(window, document, undefined) {
  * @instance
  * @memberof Viewer
  */
-    this.destroy = function() {
+    this.destroy = () => {
       if (renderer)
         {renderer.destroy()};
       if (listenersAdded) {
@@ -3036,13 +2984,12 @@ window.pannellum = (function(window, document, undefined) {
       uiContainer.classList.remove('pnlm-grab');
       uiContainer.classList.remove('pnlm-grabbing');
     };
-
   }
 
   return {
-    viewer: function(container, config) {
+    viewer(container, config) {
       return new Viewer(container, config);
     }
   };
 
-})(window, document);
+}))(window, document);
