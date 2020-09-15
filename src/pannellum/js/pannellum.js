@@ -117,7 +117,7 @@ window.pannellum = (((window, document, undefined) => {
     defaultConfig.strings = {
     // Labels
       loadButtonLabel: 'Click to<br>Load<br>Panorama',
-      loadingLabel: 'Loading...',
+      loadingLabel: 'Загрузка...',
       bylineLabel: 'by %s',    // One substitution: author
 
       // Errors
